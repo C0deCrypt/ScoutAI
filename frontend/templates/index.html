@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ResumeIQ — AI Resume Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+  <!-- ── BACKGROUND GRAIN OVERLAY ── -->
+  <div class="grain"></div>
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M9 12h6M9 16h4M6 20h12a2 2 0 002-2V8l-5-5H6a2 2 0 00-2 2v13a2 2 0 002 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 3v4a1 1 0 001 1h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="logo-text">Resume<span class="logo-accent">IQ</span></span>
+    </div>
+    <nav class="nav-pills">
+      <span class="nav-badge">Powered by Gemini</span>
+      <span class="nav-badge nav-badge--live">
+        <span class="pulse-dot"></span>AI Active
+      </span>
+    </nav>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <p class="hero-eyebrow">ATS Intelligence · Skill Matching · Voice Feedback</p>
+    <h1 class="hero-title">
+      Your Resume,<br/>
+      <em>Decoded.</em>
+    </h1>
+    <p class="hero-sub">
+      Drop your resume. Paste the job description. Get an ATS score, skill gap analysis,
+      and AI voice coaching — in seconds.
+    </p>
+  </section>
+
+  <!-- ── MAIN UPLOAD CARD ── -->
+  <main class="container">
+    <div class="upload-grid">
+
+      <!-- LEFT: File Upload -->
+      <div class="card" id="upload-card">
+        <div class="card-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Resume Upload
+        </div>
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h4M6 20h12a2 2 0 002-2V8l-5-5H6a2 2 0 00-2 2v13a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 3v4a1 1 0 001 1h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <p class="dropzone-title">Drop your resume here</p>
+          <p class="dropzone-sub">PDF or DOCX · Max 10MB</p>
+          <button class="btn-ghost" id="browse-btn">Browse File</button>
+          <input type="file" id="file-input" accept=".pdf,.docx" hidden/>
+        </div>
+        <div class="file-chosen hidden" id="file-chosen">
+          <span class="file-icon">📄</span>
+          <span class="file-name" id="file-name-display"></span>
+          <button class="file-remove" id="file-remove">✕</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Job Description -->
+      <div class="card" id="jd-card">
+        <div class="card-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Job Description
+        </div>
+        <textarea
+          id="job-description"
+          class="jd-textarea"
+          placeholder="Paste the full job description here…&#10;&#10;e.g. We are looking for a React Developer with 3+ years of experience in TypeScript, REST APIs, and cloud platforms (AWS/GCP)..."
+        ></textarea>
+        <div class="char-count" id="char-count">0 characters</div>
+      </div>
+    </div>
+
+    <!-- ANALYZE BUTTON -->
+    <div class="action-row">
+      <button class="btn-analyze" id="analyze-btn" disabled>
+        <span class="btn-text">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Analyze Resume
+        </span>
+        <span class="btn-loader hidden" id="btn-loader">
+          <span class="spinner"></span>
+          Analyzing…
+        </span>
+      </button>
+    </div>
+
+    <!-- ── LOADING OVERLAY ── -->
+    <div class="scan-overlay hidden" id="scan-overlay">
+      <div class="scan-card">
+        <div class="scan-rings">
+          <div class="ring ring-1"></div>
+          <div class="ring ring-2"></div>
+          <div class="ring ring-3"></div>
+          <div class="scan-core">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h4M6 20h12a2 2 0 002-2V8l-5-5H6a2 2 0 00-2 2v13a2 2 0 002 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3v4a1 1 0 001 1h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <p class="scan-title">Scanning Your Resume</p>
+        <p class="scan-sub" id="scan-status">Parsing document…</p>
+        <div class="scan-bar"><div class="scan-fill" id="scan-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- ── TOAST NOTIFICATIONS ── -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ── RESULTS SECTION ── -->
+    <section class="results hidden" id="results-section">
+
+      <!-- TOP STATS ROW -->
+      <div class="stats-row">
+        <!-- ATS Score Donut -->
+        <div class="stat-card stat-card--donut">
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 120 120">
+              <circle class="donut-track" cx="60" cy="60" r="50" fill="none" stroke-width="10"/>
+              <circle class="donut-fill" id="ats-circle" cx="60" cy="60" r="50" fill="none" stroke-width="10"
+                stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <span class="donut-value" id="ats-score">0</span>
+              <span class="donut-label">ATS Score</span>
+            </div>
+          </div>
+          <div class="donut-meta">
+            <p class="stat-title">ATS Compatibility</p>
+            <p class="stat-desc" id="ats-verdict"></p>
+          </div>
+        </div>
+
+        <!-- Match Percentage -->
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--match">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="stat-big" id="match-pct">—</span>
+          <span class="stat-lbl">Job Match</span>
+          <div class="match-bar-wrap">
+            <div class="match-bar"><div class="match-bar-fill" id="match-bar-fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Missing Skills Count -->
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--skills">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <span class="stat-big" id="missing-count">—</span>
+          <span class="stat-lbl">Skills to Add</span>
+          <p class="stat-hint">Review gaps below</p>
+        </div>
+
+        <!-- Interview Ready -->
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--interview">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="stat-big" id="question-count">—</span>
+          <span class="stat-lbl">AI Questions</span>
+          <p class="stat-hint">Practice below</p>
+        </div>
+      </div>
+
+      <!-- MISSING SKILLS -->
+      <div class="section-block">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">⚡</span> Missing Skills
+          </h2>
+          <p class="section-desc">Add these to your resume to dramatically improve ATS ranking</p>
+        </div>
+        <div class="skills-wrap" id="skills-wrap"></div>
+      </div>
+
+      <!-- MATCHED SKILLS -->
+      <div class="section-block">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">✓</span> Matched Skills
+          </h2>
+          <p class="section-desc">Skills already present in your resume — great work!</p>
+        </div>
+        <div class="skills-wrap skills-wrap--matched" id="matched-wrap"></div>
+      </div>
+
+      <!-- IMPROVEMENT SUGGESTIONS -->
+      <div class="section-block">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">🎯</span> Improvement Suggestions
+          </h2>
+        </div>
+        <div class="suggestions-list" id="suggestions-list"></div>
+      </div>
+
+      <!-- INTERVIEW QUESTIONS -->
+      <div class="section-block">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">💬</span> Interview Questions
+          </h2>
+          <p class="section-desc">Tailored questions based on your resume + this job</p>
+        </div>
+        <div class="questions-list" id="questions-list"></div>
+      </div>
+
+      <!-- VOICE FEEDBACK -->
+      <div class="section-block">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">🔊</span> AI Voice Coaching
+          </h2>
+          <p class="section-desc">Personalized audio feedback from your AI career coach</p>
+        </div>
+        <div class="audio-player" id="audio-player">
+          <div class="audio-waveform" id="audio-waveform">
+            <!-- bars generated by JS -->
+          </div>
+          <div class="audio-controls">
+            <button class="audio-play-btn" id="audio-play-btn" aria-label="Play">
+              <svg id="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg id="pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <div class="audio-progress-wrap">
+              <div class="audio-progress-bar">
+                <div class="audio-progress-fill" id="audio-progress-fill"></div>
+              </div>
+              <div class="audio-time">
+                <span id="audio-current">0:00</span>
+                <span id="audio-total">0:00</span>
+              </div>
+            </div>
+          </div>
+          <audio id="audio-element" hidden></audio>
+        </div>
+      </div>
+
+      <!-- ANALYZE AGAIN -->
+      <div class="action-row" style="margin-top:2.5rem;">
+        <button class="btn-ghost btn-ghost--lg" id="reset-btn">
+          ↩ Analyze Another Resume
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <p>Built with Flask · Gemini AI · Crafted for excellence</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
