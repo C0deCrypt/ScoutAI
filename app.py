@@ -32,7 +32,7 @@ def analyze_endpoint():
         analysis_results = analyze_resume(resume_text, job_description)
         
         # 5. Audio Streaming: Generate base64 audio for the voice summary
-        voice_summary_text = analysis_results.get("Voice Summary Text", "Analysis complete.")
+        voice_summary_text = analysis_results.get("voice_summary_text", "Analysis complete.")
         audio_base64 = generate_base64_audio(voice_summary_text)
         
         # Attach the audio string to the final payload
